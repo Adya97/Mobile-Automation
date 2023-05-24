@@ -1,5 +1,6 @@
-package Base;
+package base;
 
+import com.relevantcodes.extentreports.LogStatus;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.HasSettings;
 import io.appium.java_client.MobileElement;
@@ -14,7 +15,12 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.BeforeMethod;
+import pagescreenDevice.mobile.mobile.HomePage;
+import reports.ExtentTestManager;
+import utilities.ReadConfig;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,28 +28,37 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 public class BaseTest {
 
-    private static final String LOG4J_PROPERTIES = "./src/java/Resources/log4j.properties";
+    private static final String LOG4J_PROPERTIES = "C:\\Users\\ViNUS\\IdeaProjects\\MobileAutomationFramework\\resouces\\log4j.properties";
     private final static String START_LOGGING_TEXT = "------------------------------Start logging------------------------------";
-    private final static String GLOBAL_PROPERTIES = "/src/main/resources/global.properties";
+    private final static String GLOBAL_PROPERTIES = "C:\\Users\\ViNUS\\IdeaProjects\\MobileAutomationFramework\\resouces\\global.properties";
     public static Logger logger = LogManager.getLogger(BaseTest.class);
     public static String appName=null;
     public static String iosReset=null;
     protected AppiumDriver<MobileElement> mobileDriver;
     public Properties testData;
-
     public WebDriver webDriver;
-    
+    public static HomePage homePage;
+    ReadConfig readconfig = new ReadConfig();
 
     @BeforeMethod(alwaysRun = true)
     public void setupMobileDriver() throws IOException {
         /*Init Mobile Driver*/
         mobileDriver = initAppiumDriver();
+        initMobilePages();
     }
-    @BeforeMethod(alwaysRun = true)
+
+   /* @BeforeMethod(alwaysRun = true)
     public void setupWebDriver() {
         webDriver = initWebDriver();
+    }*/
+
+    public void initMobilePages() {
+        homePage = new HomePage(mobileDriver);
     }
 
     /**
@@ -53,10 +68,10 @@ public class BaseTest {
      */
     public AppiumDriver<MobileElement> initAppiumDriver() throws IOException {
         AppiumDriver<MobileElement> mobileDriver;
-        logger = Logger.getLogger("PlobalApps");
+        logger = Logger.getLogger("AdityaNisal");
         PropertyConfigurator.configure(LOG4J_PROPERTIES);
         logger.info(START_LOGGING_TEXT);
-        FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + GLOBAL_PROPERTIES);
+        FileInputStream fis = new FileInputStream(GLOBAL_PROPERTIES);
         Properties prop = new Properties();
         prop.load(fis);
         String port = prop.getProperty("port");
@@ -74,26 +89,8 @@ public class BaseTest {
         return mobileDriver;
     }
 
-    /**
-     * Initialises the Web Driver with its required capabilities
-     * @return
-     */
-    public WebDriver initWebDriver() {
-        WebDriver webDriver;
-        logger=Logger.getLogger("AdityaNisal");
-        PropertyConfigurator.configure(LOG4J_PROPERTIES);
-        logger.info(START_LOGGING_TEXT);
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--incognito");
-        options.addArguments("window-size= 1400,800");
-//        options.addArguments("---headless");
-        webDriver = new ChromeDriver(options);
-        webDriver.manage().window().maximize();
-        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-        return webDriver;
-    }
     public static DesiredCapabilities capabilities() throws IOException {
-        FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/src/main/resources/global.properties");
+        FileInputStream fis = new FileInputStream(GLOBAL_PROPERTIES);
         Properties prop = new Properties();
         prop.load(fis);
         DesiredCapabilities capabilities = new DesiredCapabilities();
@@ -154,6 +151,60 @@ public class BaseTest {
             logger.info("Capabilities: "+ capabilities);
         }
         return capabilities;
+    }
 
+    public void waitElement(MobileElement element, int timer) {
+        WebDriverWait wait = new WebDriverWait(mobileDriver, timer);
+        wait.until(ExpectedConditions.visibilityOf(element));
+    }
+
+    /**
+     * owner : Aditya Nisal
+     * Location allowed
+     * App name: Steve Madden
+     */
+    public void clickOnPermission() {
+        waitElement(homePage.getLocationAllowed(), 6);
+        homePage.getLocationAllowed().click();
+        logger.info("Location allowed");
+        ExtentTestManager.getTest().log(LogStatus.PASS, "Location allowed");
+    }
+    /**
+     * owner : Aditya Nisal
+     * OnBoarding Page
+     * App name: Steve Madden
+     */
+    public void onBoardingNextButton() {
+        waitElement(homePage.getOnBoardingNextButton1(), 6);
+        homePage.getOnBoardingNextButton1().click();
+        waitElement(homePage.getOnBoardingNextButton2(), 6);
+        homePage.getOnBoardingNextButton2().click();
+        logger.info("On-Boarding Page verified successfully");
+        ExtentTestManager.getTest().log(LogStatus.PASS, "On-Boarding Page verified successfully");
+    }
+
+    /**
+     * owner : Aditya Nisal
+     * Verify App logo on Home Page
+     * App name: Steve Madden
+     */
+    public void checkAppLogoOnHomePage() {
+        assertThat(homePage.getAppLogoOnHomePage().isDisplayed(), equalTo(true));
+        logger.info("Verified App Logo on home Page successfully");
+        ExtentTestManager.getTest().log(LogStatus.PASS, "Verified App Logo on home Page successfully");
+    }
+
+    /**
+     * App Name: SM
+     * Assignee Name: Aditya Nisal
+     * Verify homepage for SM and Platform
+     */
+    public void verifyHomepage() {
+        waitElement(homePage.getCartForSM(), 16);
+        assertThat(homePage.getAppLogoOnHomePage().isDisplayed(), equalTo(true));
+        assertThat(homePage.getSearchProductsText().isDisplayed(), equalTo(true));
+        assertThat(homePage.getHamburgerMenuForSM().isDisplayed(), equalTo(true));
+        logger.info(appName + " Home page verify successfully");
+        ExtentTestManager.getTest().log(LogStatus.PASS, appName + " Home page verify successfully");
     }
 }
